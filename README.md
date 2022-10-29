@@ -1,1 +1,3 @@
-# traitor-tracing
+# Traitor Tracing
+
+Cryptography final project implementation
