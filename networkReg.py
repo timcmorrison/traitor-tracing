@@ -3,6 +3,7 @@ import socket
 import struct
 import threading
 import random
+import sys
 '''
 The send and receive functions are modified versions of the code found here: https://stackoverflow.com/a/1794373
 
@@ -59,10 +60,27 @@ def receive(MCAST_GRP, MCAST_PORT, IS_ALL_GROUPS):
             # might get messed up if more 3+ duplicates are running
 
 
-# sets up threading
-sender = threading.Thread(target=send, args=(MCAST_GRP, MCAST_PORT))
-receiver = threading.Thread(target=receive, args=(MCAST_GRP, MCAST_PORT, IS_ALL_GROUPS))
 
-# begins threading
-sender.start()
-receiver.start()
+
+
+def main():
+    #check key
+    key = '1234'
+
+
+    if len(sys.argv) != 2:
+        return 0
+    if sys.argv[1] == key:
+        print("correct key detected")
+        # sets up threading
+        sender = threading.Thread(target=send, args=(MCAST_GRP, MCAST_PORT))
+        receiver = threading.Thread(target=receive, args=(MCAST_GRP, MCAST_PORT, IS_ALL_GROUPS))
+
+        # begins threading
+        sender.start()
+        receiver.start()
+        
+
+
+if __name__ == "__main__":
+    main()
