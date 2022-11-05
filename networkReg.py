@@ -1,9 +1,15 @@
-import time
+import colorsys
+import math
+import multiprocessing as mp
+import random
 import socket
 import struct
-import threading
-import random
 import sys
+import time
+from donut import * # the donut file
+
+import pygame
+
 '''
 The send and receive functions are modified versions of the code found here: https://stackoverflow.com/a/1794373
 
@@ -34,7 +40,7 @@ def send(MCAST_GRP, MCAST_PORT):
         #sock.sendto(b"robot", (MCAST_GRP, MCAST_PORT))
         time.sleep(5)
 
-def receive(MCAST_GRP, MCAST_PORT, IS_ALL_GROUPS):
+def receive(MCAST_GRP, MCAST_PORT, IS_ALL_GROUPS, flagStop):
     '''
     receives any packets sent to port 5007, and compares them with the id of this program.
     If they are not the same, then that means a copied version of this program is running
@@ -56,6 +62,9 @@ def receive(MCAST_GRP, MCAST_PORT, IS_ALL_GROUPS):
     while True:
         if int(sock.recv(10240).decode()) != id:  # another instance is running
             print("UH OH!")
+            flagStop.set()
+            time.sleep(5)
+            flagStop.clear()
             # needs to stop instead of just printing uh oh. Should probably stop for 5 seconds since that's how often signal is sent.
             # might get messed up if more 3+ duplicates are running
 
@@ -63,9 +72,11 @@ def receive(MCAST_GRP, MCAST_PORT, IS_ALL_GROUPS):
 
 
 
+
 def main():
-    #check key
-    key = '1234'
+    key = '1234' # key for product
+    flagStop = mp.Event() # flag for when to stop
+
 
 
     if len(sys.argv) != 2:
@@ -73,14 +84,75 @@ def main():
     if sys.argv[1] == key:
         print("correct key detected")
         # sets up threading
-        sender = threading.Thread(target=send, args=(MCAST_GRP, MCAST_PORT))
-        receiver = threading.Thread(target=receive, args=(MCAST_GRP, MCAST_PORT, IS_ALL_GROUPS))
+        sender = mp.Process(target=send, args=(MCAST_GRP, MCAST_PORT))
+        receiver = mp.Process(target=receive, args=(MCAST_GRP, MCAST_PORT, IS_ALL_GROUPS, flagStop))
+        #spinner = mp.Process(target = donut.runDonut())
 
         # begins threading
         sender.start()
         receiver.start()
-        
+        #spinner.start()
 
+        #donut stuff go here
+        global A, B, x_start, y_start, hue, screen
+        run = True
+        while run:
+
+            screen.fill((black))
+
+            z = [0] * screen_size  # Donut. Fills donut space
+            b = [' '] * screen_size  # Background. Fills empty space
+
+            for j in range(0, 628, theta_spacing):  # from 0 to 2pi
+                for i in range(0, 628, phi_spacing):  # from 0 to 2pi
+                    c = math.sin(i)
+                    d = math.cos(j)
+                    e = math.sin(A)
+                    f = math.sin(j)
+                    g = math.cos(A)
+                    h = d + 2
+                    D = 1 / (c * h * e + f * g + 5)
+                    l = math.cos(i)
+                    m = math.cos(B)
+                    n = math.sin(B)
+                    t = c * h * g - f * e
+                    x = int(x_offset + 40 * D * (l * h * m - t * n))  # 3D x coordinate after rotation
+                    y = int(y_offset + 20 * D * (l * h * n + t * m))  # 3D y coordinate after rotation
+                    o = int(x + columns * y)  
+                    N = int(8 * ((f * e - c * d * g) * m - c * d * e - f * g - l * d * n))  # luminance index
+                    if rows > y and y > 0 and x > 0 and columns > x and D > z[o]:
+                        z[o] = D
+                        b[o] = chars[N if N > 0 else 0]
+
+            if y_start == rows * y_separator - y_separator:
+                y_start = 0
+
+            for i in range(len(b)):
+                A += random.uniform(0, 0.0001)  # for faster rotation change to bigger value
+                B += random.uniform(0, 0.0001)  # for faster rotation change to bigger value
+                if i == 0 or i % columns:
+                    text_display(b[i], x_start, y_start)
+                    x_start += x_separator
+                else:
+                    y_start += y_separator
+                    x_start = 0
+                    text_display(b[i], x_start, y_start)
+                    x_start += x_separator
+
+            #print(flagStop.is_set())
+            while flagStop.is_set():
+                time.sleep(5)
+
+            pygame.display.update()
+
+            hue += 0.005
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    run = False
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        run = False
 
 if __name__ == "__main__":
     main()
