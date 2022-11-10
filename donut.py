@@ -1,4 +1,5 @@
 import colorsys
+from dis import dis
 import math
 import random
 import time
@@ -34,9 +35,9 @@ phi_spacing = 1 # for faster rotation change to 2, 3 or more, but first change 8
 
 chars = ".,-~:;=!*#$@"  # luminance index
 
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-
-display_surface = pygame.display.set_mode((WIDTH, HEIGHT))
+#had to move
+#screen = pygame.display.set_mode((WIDTH, HEIGHT))
+#display_surface = pygame.display.set_mode((WIDTH, HEIGHT))
 # display_surface = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 pygame.display.set_caption('Donut')
 font = pygame.font.SysFont('Arial', 18, bold=True)
@@ -45,7 +46,7 @@ def hsv2rgb(h, s, v):
     return tuple(round(i * 255) for i in colorsys.hsv_to_rgb(h, s, v))
 
 
-def text_display(letter, x_start, y_start):
+def text_display(letter, x_start, y_start, display_surface):
     text = font.render(str(letter), True, hsv2rgb(hue, 1, 1))
     display_surface.blit(text, (x_start, y_start))
 
@@ -56,6 +57,8 @@ def text_display(letter, x_start, y_start):
 def runDonut():
     global A, B, x_start, y_start, hue
     run = True
+    screen = pygame.display.set_mode((WIDTH, HEIGHT))
+    display_surface = pygame.display.set_mode((WIDTH, HEIGHT))
     while run:
 
         screen.fill((black))
@@ -91,12 +94,12 @@ def runDonut():
             A += random.uniform(0, 0.0001)  # for faster rotation change to bigger value
             B += random.uniform(0, 0.0001)  # for faster rotation change to bigger value
             if i == 0 or i % columns:
-                text_display(b[i], x_start, y_start)
+                text_display(b[i], x_start, y_start, display_surface)
                 x_start += x_separator
             else:
                 y_start += y_separator
                 x_start = 0
-                text_display(b[i], x_start, y_start)
+                text_display(b[i], x_start, y_start, display_surface)
                 x_start += x_separator
 
 
@@ -111,3 +114,4 @@ def runDonut():
                 if event.key == pygame.K_ESCAPE:
                     run = False
 
+#runDonut()

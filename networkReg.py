@@ -1,4 +1,5 @@
 import colorsys
+import contextlib # used to supress pygame hello message
 import math
 import multiprocessing as mp
 import random
@@ -6,9 +7,11 @@ import socket
 import struct
 import sys
 import time
-from donut import * # the donut file
 
-import pygame
+with contextlib.redirect_stdout(None): # suppresses pygame hello message
+    import pygame
+    
+from donut import *  # the donut file
 
 '''
 The send and receive functions are modified versions of the code found here: https://stackoverflow.com/a/1794373
@@ -74,7 +77,7 @@ def receive(MCAST_GRP, MCAST_PORT, IS_ALL_GROUPS, flagStop):
 
 
 def main():
-    key = '1234' # key for product
+    key = '0034' # key for product
     flagStop = mp.Event() # flag for when to stop
 
 
@@ -96,6 +99,8 @@ def main():
         #donut stuff go here
         global A, B, x_start, y_start, hue, screen
         run = True
+        screen = pygame.display.set_mode((WIDTH, HEIGHT))
+        display_surface = pygame.display.set_mode((WIDTH, HEIGHT))
         while run:
 
             screen.fill((black))
@@ -131,12 +136,12 @@ def main():
                 A += random.uniform(0, 0.0001)  # for faster rotation change to bigger value
                 B += random.uniform(0, 0.0001)  # for faster rotation change to bigger value
                 if i == 0 or i % columns:
-                    text_display(b[i], x_start, y_start)
+                    text_display(b[i], x_start, y_start, display_surface)
                     x_start += x_separator
                 else:
                     y_start += y_separator
                     x_start = 0
-                    text_display(b[i], x_start, y_start)
+                    text_display(b[i], x_start, y_start, display_surface)
                     x_start += x_separator
 
             #print(flagStop.is_set())
