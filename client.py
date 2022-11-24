@@ -1,24 +1,41 @@
-from http import server
 import socket
-from wsgiref.simple_server import server_version
+import time
+import sys
 
-# Connect to server
-host = socket.gethostname()
-port = 12345 # The same port as used by the server
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.connect((host, port))
+def main():
+    if len(sys.argv) != 2:
+        print("Usage: client.py key")
+        exit()
 
-# Send key
-key = "veryvalidkey"
-encoded_key = key.encode('utf-8')
-s.sendall(encoded_key)
+    # Connect to server
+    host = '127.0.0.1'
+    port = 12345 # Doesn't matter, as long as it matches server
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server.connect((host, port))
 
-# Wait for response
-server_response = False
-while not server_response:
-    data = s.recv(1024)
-    if len(data) > 1:
-        server_response = True
+    key = sys.argv[1]
+    encoded_key = key.encode('utf-8')
 
-s.close()
-print('Received', repr(data)[1:])
+    while True:
+        # Send key
+        server.sendall(encoded_key)
+
+        # Wait for response
+        server_responded = False
+        while not server_responded:
+            server_msg = server.recv(1024)
+            if len(server_msg) > 1:
+                server_responded = True
+
+        # See if key was accepted
+        server_msg = server_msg.decode('utf-8')
+        print(server_msg)
+        if "invalid" in server_msg:
+            exit()
+
+        # Else, the key was valid, so allow the user to continue
+        time.sleep(5)
+
+
+if __name__ == '__main__':
+    main()     
